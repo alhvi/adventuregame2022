@@ -216,6 +216,11 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &906680845 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2066896392038628118, guid: 45288819fde2143449a96207b14db0bb, type: 3}
+  m_PrefabInstance: {fileID: 1634638604}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &939396824
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -884,6 +889,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 5
   rotationSpeed: 5
+  cameraLookout: {fileID: 996894609}
+  model: {fileID: 906680845}
 --- !u!143 &1503316910
 CharacterController:
   m_ObjectHideFlags: 0

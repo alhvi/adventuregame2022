@@ -13,6 +13,7 @@ public class PlayerMovement : MonoBehaviour {
     public GameObject cameraLookout;
     private float cameraRotationSpeed = 300f;
     public GameObject model;
+    public bool thirdPersonActive = true;
 
     private void Start() {
         charController = GetComponent<CharacterController>();
@@ -20,14 +21,53 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     private void Update() {
+        PrepareForRunning();
 
-        //Ability to run
-        if (Input.GetKey(KeyCode.LeftShift)) {
-            speedFactor = 2f;
-        } else {
-            speedFactor = 1f;
+        CameraMovement();
+
+        Vector3 movementVector = PlayerMov();
+
+        //Set animation
+        anim.SetFloat("Speed", movementVector.magnitude * speedFactor);
+    }
+
+    private Vector3 PlayerMov() {
+        //Obtain movement values
+        float movx = Input.GetAxis("Horizontal");
+        float movz = Input.GetAxis("Vertical");
+        Vector3 movementVector = Vector3.zero;
+
+        //Obtain vectors
+        if (!thirdPersonActive) {
+            model.transform.forward = cameraLookout.transform.forward;
         }
 
+        movementVector = movx * cameraLookout.transform.right + movz * cameraLookout.transform.forward;
+
+        movementVector = new Vector3(movementVector.x, 0, movementVector.z);
+        movementVector.Normalize();
+
+        //If movement is not zero
+        if (movementVector.magnitude > 0.01) {
+
+            charController.SimpleMove(movementVector * speed * speedFactor);
+
+            rotationQuat = Quaternion.LookRotation(movementVector);
+            t = 0f;
+        }
+
+        if (thirdPersonActive) {
+            //Rotate using lerp
+            if (speed * t < 1) {
+                t += Time.deltaTime;
+                model.transform.rotation = Quaternion.Lerp(model.transform.rotation, rotationQuat, speed * t);
+            }
+        }
+
+        return movementVector;
+    }
+
+    private void CameraMovement() {
         //Read mouse components to move camera
         float mousex = Input.GetAxis("Mouse X");
         float mousey = Input.GetAxis("Mouse Y");
@@ -50,44 +90,15 @@ public class PlayerMovement : MonoBehaviour {
 
         //Apply rotation to camera lookout
         cameraLookout.transform.rotation = yaw * appliedPitch;
+    }
 
-        //Obtain movement values
-        float movx = Input.GetAxis("Horizontal");
-        float movz = Input.GetAxis("Vertical");
-
-        //Obtain vectors
-        Vector3 movementVector = new Vector3(-movx, 0, movz);
-        movementVector.Normalize();
-        Vector3 cameraDirection = new Vector3(cameraLookout.transform.forward.x, 0, cameraLookout.transform.forward.z);
-        cameraDirection.Normalize();
-
-        //If movement is not zero
-        if (movementVector.magnitude > 0.01) {
-
-            //Obtain angles to combine camera movement and directional movement (wasd)
-            float angleCam = Mathf.Atan2(cameraDirection.z, cameraDirection.x);
-            float angleInput = Mathf.Atan2(movementVector.z, movementVector.x);
-            float angle = angleInput - angleCam;
-
-            //Obtain new vector with movement combined
-            Vector3 movementDir = new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle));
-
-            //Move using new vectos
-            charController.SimpleMove(movementDir * speed * speedFactor);
-
-            //Obtain quaternion to new forward 
-            rotationQuat = Quaternion.LookRotation(movementDir);
-            t = 0f;
+    private void PrepareForRunning() {
+        //Ability to run
+        if (Input.GetKey(KeyCode.LeftShift)) {
+            speedFactor = 2f;
+        } else {
+            speedFactor = 1f;
         }
-
-        //Rotate using lerp
-        if (speed * t < 1) {
-            t += Time.deltaTime;
-            model.transform.rotation = Quaternion.Lerp(model.transform.rotation, rotationQuat, speed * t);
-        }
-
-        //Set animation
-        anim.SetFloat("Speed", movementVector.magnitude * speedFactor);
     }
 
     private float FormatAngle(float angle) {

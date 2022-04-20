@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour {
+public class PlayerMovement2 : MonoBehaviour {
     private CharacterController charController;
     private Animator anim;
     public float speed = 5f;
@@ -56,27 +56,16 @@ public class PlayerMovement : MonoBehaviour {
         float movz = Input.GetAxis("Vertical");
 
         //Obtain vectors
-        Vector3 movementVector = new Vector3(-movx, 0, movz);
+        Vector3 movementVector = movx * cameraLookout.transform.right + movz * cameraLookout.transform.forward;
+        movementVector = new Vector3(movementVector.x, 0, movementVector.z);
         movementVector.Normalize();
-        Vector3 cameraDirection = new Vector3(cameraLookout.transform.forward.x, 0, cameraLookout.transform.forward.z);
-        cameraDirection.Normalize();
 
         //If movement is not zero
         if (movementVector.magnitude > 0.01) {
 
-            //Obtain angles to combine camera movement and directional movement (wasd)
-            float angleCam = Mathf.Atan2(cameraDirection.z, cameraDirection.x);
-            float angleInput = Mathf.Atan2(movementVector.z, movementVector.x);
-            float angle = angleInput - angleCam;
+            charController.SimpleMove(movementVector * speed * speedFactor);
 
-            //Obtain new vector with movement combined
-            Vector3 movementDir = new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle));
-
-            //Move using new vectos
-            charController.SimpleMove(movementDir * speed * speedFactor);
-
-            //Obtain quaternion to new forward 
-            rotationQuat = Quaternion.LookRotation(movementDir);
+            rotationQuat = Quaternion.LookRotation(movementVector);
             t = 0f;
         }
 

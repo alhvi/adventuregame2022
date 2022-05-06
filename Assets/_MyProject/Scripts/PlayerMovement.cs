@@ -14,6 +14,11 @@ public class PlayerMovement : MonoBehaviour {
     private float cameraRotationSpeed = 300f;
     public GameObject model;
     public bool thirdPersonActive = true;
+    private bool isJumping = false;
+    private float jumpMultiplier = 10f;
+    public AnimationCurve jumpingAnimationCurve;
+    public float updateFrameCount = 0;
+    public float coroutineFrameCount = 0;
 
     private void Start() {
         charController = GetComponent<CharacterController>();
@@ -29,6 +34,9 @@ public class PlayerMovement : MonoBehaviour {
 
         //Set animation
         anim.SetFloat("Speed", movementVector.magnitude * speedFactor);
+
+        Jump();
+
     }
 
     private Vector3 PlayerMov() {
@@ -47,10 +55,10 @@ public class PlayerMovement : MonoBehaviour {
         movementVector = new Vector3(movementVector.x, 0, movementVector.z);
         movementVector.Normalize();
 
+        charController.SimpleMove(movementVector * speed * speedFactor);
+
         //If movement is not zero
         if (movementVector.magnitude > 0.01) {
-
-            charController.SimpleMove(movementVector * speed * speedFactor);
 
             rotationQuat = Quaternion.LookRotation(movementVector);
             t = 0f;
@@ -109,4 +117,27 @@ public class PlayerMovement : MonoBehaviour {
 
         return angle;
     }
+
+    private void Jump() {
+        if (!isJumping && Input.GetKeyDown(KeyCode.Space)) {
+            isJumping = true;
+            StartCoroutine(JumpingCoroutine());
+        }
+    }
+
+    public IEnumerator JumpingCoroutine() {
+        float timeJumping = 0;
+
+        do {
+            float jumpForce = jumpingAnimationCurve.Evaluate(timeJumping);
+            charController.Move(Vector3.up * jumpForce * jumpMultiplier * Time.deltaTime);
+            timeJumping += Time.deltaTime;
+            yield return null;
+
+        } while (!charController.isGrounded);
+
+        isJumping = false;
+
+    }
+
 }
